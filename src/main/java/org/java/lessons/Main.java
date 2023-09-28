@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Scanner;
 
 public class Main {
 	
@@ -13,17 +14,25 @@ public class Main {
 		
 	public static void main(String[] args) {
 		
-		final String sql = " SELECT c.name, c.country_id , r.name , c2.name  \r\n "
-				+ " FROM countries c \r\n "
-				+ "	JOIN regions r \r\n "
-				+ "	ON c.region_id = r.region_id \r\n "
-				+ "	JOIN continents c2 \r\n "
-				+ "	ON r.continent_id = c2.continent_id \r\n "
-				+ " ORDER BY c.name  ";
+		Scanner sc = new Scanner(System.in);
+		
+		System.out.print("Cerca una nazione");
+		String value = sc.nextLine();
+		
+		final String param = "%" + value +  "%";
+		
+		final String sql = " SELECT c.name, c.country_id , r.name , c2.name  \r\n"
+				+ " FROM countries c \r\n"
+				+ "	JOIN regions r \r\n"
+				+ "	ON c.region_id = r.region_id \r\n"
+				+ "	JOIN continents c2 \r\n"
+				+ "	ON r.continent_id = c2.continent_id \r\n"
+				+ " WHERE c.name LIKE ?";
 		
 		try (Connection conn = DriverManager.getConnection(url, user, pwd)) {
 			try {
 				PreparedStatement ps = conn.prepareStatement(sql);
+				ps.setString(1, param);
 				ResultSet rs = ps.executeQuery();
 				
 				while(rs.next())
