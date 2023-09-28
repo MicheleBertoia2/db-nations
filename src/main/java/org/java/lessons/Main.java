@@ -16,7 +16,7 @@ public class Main {
 		
 		Scanner sc = new Scanner(System.in);
 		
-		System.out.print("Cerca una nazione");
+		System.out.print("Cerca una nazione ");
 		String value = sc.nextLine();
 		
 		final String param = "%" + value +  "%";
@@ -57,5 +57,84 @@ public class Main {
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+		
+		System.out.print("Inserisci un id per ottenere i dettagli della nazione ");
+		int idNation = Integer.valueOf(sc.nextLine());
+		
+		final String sql2 = "SELECT c.name, cs.`year` , cs.population , cs.gdp  \r\n"
+							+ " FROM countries c \r\n"
+							+ "	JOIN  country_stats cs \r\n"
+							+ "	ON c.country_id = cs.country_id \r\n"
+							+ "	JOIN country_languages cl \r\n"
+							+ "	ON c.country_id = cl.country_id \r\n"
+							+ "	JOIN languages l \r\n"
+							+ "	ON cl.language_id = l.language_id \r\n"
+							+ " WHERE c.country_id = ? \r\n"
+							+ " ORDER BY cs.`year` DESC \r\n"
+							+ " LIMIT 1";
+		
+		final String sqlLang = "SELECT l.`language`  \r\n"
+							+ " FROM countries c \r\n"
+							+ "	JOIN  country_stats cs \r\n"
+							+ "	ON c.country_id = cs.country_id \r\n"
+							+ "	JOIN country_languages cl \r\n"
+							+ "	ON c.country_id = cl.country_id \r\n"
+							+ "	JOIN languages l \r\n"
+							+ "	ON cl.language_id = l.language_id \r\n"
+							+ " WHERE c.country_id = ? \r\n"
+							+ " GROUP BY l.`language` \r\n"
+							+ " ORDER BY cs.`year` DESC \r\n";
+
+		try (Connection conn = DriverManager.getConnection(url, user, pwd)) {
+			try {
+				conn.setAutoCommit(false);
+				
+				PreparedStatement ps = conn.prepareStatement(sql2);
+				ps.setInt(1, idNation);;
+				ResultSet rs = ps.executeQuery();
+				
+				PreparedStatement psLang = conn.prepareStatement(sqlLang);
+				psLang.setInt(1, idNation);
+				ResultSet rsLang = psLang.executeQuery();
+				
+				String countryName = "";
+				int year = 0;
+				long population = 0;
+				long gdp =0;
+				String languages = "";
+				
+				while(rs.next())
+				{
+					countryName = rs.getString(1);
+					
+					year = rs.getInt(2);
+					population = rs.getLong(3);
+					gdp = rs.getLong(4);				
+					
+				}
+				
+				
+				while(rsLang.next())
+				{
+					languages += rsLang.getString(1) + " ";
+				}
+				
+					System.out.println("Dettagli nazione: " + countryName);
+					System.out.println("Lingue: " + languages );
+					System.out.println("Dati piu' recenti: " + year);
+					System.out.println("Popolazione: " + population);
+					System.out.println("GDP: " + gdp);
+					
+					System.out.println("\n----------------\n");
+				
+			} catch (Exception e)
+			{
+				System.err.println(e.getMessage());
+			}
+			
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		sc.close();
 	}
 }
